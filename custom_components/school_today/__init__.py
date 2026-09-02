@@ -1,8 +1,10 @@
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
+import logging
 
 
 DOMAIN = "school_today"
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -15,7 +17,62 @@ async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
 ) -> bool:
-    """Set up School Today from a config entry."""
+    """Set up School Today config entry."""
+
+    async def handle_get_menu(call: ServiceCall) -> None:
+        """Handle get menu service."""
+
+        date = call.data.get("date")
+        meal = call.data.get("meal")
+
+        _LOGGER.warning(
+            "School Today input: date=%r (%s), meal=%r (%s)",
+            date,
+            type(date).__name__,
+            meal,
+            type(meal).__name__,
+        )
+
+        sensor = hass.states.get("sensor.school_today_menu")
+
+        if sensor is None:
+            _LOGGER.warning("School Today sensor not found")
+            return
+
+        menu = sensor.attributes.get("menu", [])
+
+        _LOGGER.warning(
+            "School Today menu: %d days",
+            len(menu),
+        )
+
+        result = []
+
+        for day in menu:
+            if day.get("date") != date:
+                continue
+
+            for meal_data in day.get("meals", []):
+                if meal_data.get("name") != meal:
+                    continue
+
+                for dish in meal_data.get("dishes", []):
+                    result.append(dish.get("name"))
+
+        response = ", ".join(result)
+
+        _LOGGER.warning(
+            "School Today result: %s",
+            response,
+        )
+
+
+    if not hass.services.has_service(DOMAIN, "get_menu"):
+        hass.services.async_register(
+            DOMAIN,
+            "get_menu",
+            handle_get_menu,
+        )
 
     await hass.config_entries.async_forward_entry_setups(
         entry,
