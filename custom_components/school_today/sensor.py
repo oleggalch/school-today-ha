@@ -1,5 +1,4 @@
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import UnitOfCount
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 
@@ -17,7 +16,6 @@ class SchoolTodayMenuSensor(SensorEntity):
     """School Today menu sensor."""
 
     _attr_name = "School Today Menu"
-    _attr_native_unit_of_measurement = UnitOfCount
 
     def __init__(self, api_url):
         self.api_url = api_url
