@@ -23,10 +23,17 @@ class Menu:
     def __init__(self, client):
         self.client = client
         self.days = []
+        self.last_update = None
 
     def get_menu(self, date_from, date_to=None):
         if date_to is None:
             date_to = date_from
+
+        now = datetime.now()
+
+        if self.last_update is not None:
+            if now - self.last_update < timedelta(hours=1):
+                return self.days
 
         if date_to < date_from:
             raise ValueError(
@@ -54,6 +61,7 @@ class Menu:
             current_week += timedelta(days=7)
 
         self.days = result
+        self.last_update = now
 
         return result
 

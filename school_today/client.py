@@ -9,6 +9,7 @@ class SchoolTodayClient:
 
     def __init__(self):
         self.session = requests.Session()
+        self.logged_in = False
 
         config = Config()
 
@@ -16,6 +17,9 @@ class SchoolTodayClient:
         self.password = config.password
 
     def login(self):
+        if self.logged_in:
+            return True
+
         login_url = "https://school-today.com/Account/Login"
 
         response = self.session.get(login_url)
@@ -53,4 +57,8 @@ class SchoolTodayClient:
         print("После входа:", response.status_code)
         print("URL:", response.url)
 
-        return response.url == "https://school-today.com/Profile"
+        if response.url == "https://school-today.com/Profile":
+            self.logged_in = True
+            return True
+
+        return False
