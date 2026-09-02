@@ -38,3 +38,7 @@ class SchoolTodayMenuSensor(SensorEntity):
             data = await response.json()
 
         self._attr_native_value = len(data)
+
+        self._attr_extra_state_attributes = {
+            "menu": data
+        }
