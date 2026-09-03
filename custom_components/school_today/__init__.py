@@ -1,25 +1,22 @@
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, ServiceCall
 import logging
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse
+from homeassistant.exceptions import HomeAssistantError
 
 
 DOMAIN = "school_today"
+
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(
+    hass: HomeAssistant,
+    config: dict,
+) -> bool:
     """Set up School Today."""
 
-    return True
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-) -> bool:
-    """Set up School Today config entry."""
-
-    async def handle_get_menu(call: ServiceCall) -> None:
+    async def handle_get_menu(call: ServiceCall) -> ServiceResponse:
         """Handle get menu service."""
 
         date = call.data.get("date")
@@ -36,8 +33,9 @@ async def async_setup_entry(
         sensor = hass.states.get("sensor.school_today_menu")
 
         if sensor is None:
-            _LOGGER.warning("School Today sensor not found")
-            return
+            raise HomeAssistantError(
+                "School Today sensor not found"
+            )
 
         menu = sensor.attributes.get("menu", [])
 
@@ -66,13 +64,28 @@ async def async_setup_entry(
             response,
         )
 
+        return {
+            "response": response,
+            "date": date,
+            "meal": meal,
+        }
 
     if not hass.services.has_service(DOMAIN, "get_menu"):
         hass.services.async_register(
             DOMAIN,
             "get_menu",
             handle_get_menu,
+            supports_response=SupportsResponse.ONLY,
         )
+
+    return True
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+) -> bool:
+    """Set up School Today config entry."""
 
     await hass.config_entries.async_forward_entry_setups(
         entry,
