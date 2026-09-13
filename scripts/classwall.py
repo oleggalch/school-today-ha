@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import datetime
 from pathlib import Path
 
@@ -48,6 +49,20 @@ def download_file(client, file_data, destination):
         ):
             if chunk:
                 file.write(chunk)
+
+
+def set_file_date(file_path, date):
+    file_datetime = datetime.strptime(
+        f"{date} 12:00:00",
+        "%Y-%m-%d %H:%M:%S"
+    )
+
+    timestamp = file_datetime.timestamp()
+
+    os.utime(
+        file_path,
+        (timestamp, timestamp)
+    )
 
 
 def load_existing_ids(archive_dir):
@@ -112,6 +127,11 @@ def save_day(
                     client,
                     media,
                     file_path
+                )
+
+                set_file_date(
+                    file_path,
+                    date
                 )
 
             metadata_file = dict(media)
