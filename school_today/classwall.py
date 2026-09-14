@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from bs4 import BeautifulSoup
 
@@ -79,10 +79,30 @@ class ClassWall:
                     datetime_value = element.get("data-datetime")
 
                     if datetime_value:
-                        current_date = datetime.strptime(
-                            f"{datetime_value}.{current_year}",
-                            "%d.%m.%Y"
-                        ).date()
+                        date_label = datetime_value.strip().lower()
+
+                        if date_label in {
+                            "сьогодні",
+                            "сегодня",
+                            "today",
+                        }:
+                            current_date = datetime.now().date()
+
+                        elif date_label in {
+                            "вчора",
+                            "вчера",
+                            "yesterday",
+                        }:
+                            current_date = (
+                                datetime.now().date()
+                                - timedelta(days=1)
+                            )
+
+                        else:
+                            current_date = datetime.strptime(
+                                f"{datetime_value}.{current_year}",
+                                "%d.%m.%Y"
+                            ).date()
 
                     continue
 
